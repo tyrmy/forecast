@@ -14,13 +14,16 @@ import dateutil.parser as parser
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 
+from scipy.signal import savgol_filter
+import pandas as pd
+
 mins = mdates.MinuteLocator(interval=30)
 hours = mdates.HourLocator(2)
 fmt = mdates.DateFormatter('%m-%d %H:%M')
 
 def plot_forecast(city):
     """ Fetch data from ilmatieteen laitos and plot results for a city specified """
-    url = 'http://opendata.fmi.fi/wfs?service=WFS&version=2.0.0&request=getFeature&storedquery_id=fmi::forecast::hirlam::surface::point::timevaluepair&place={}&parameters=temperature&'.format(city)
+    url = 'http://opendata.fmi.fi/wfs?service=WFS&version=2.0.0&request=getFeature&storedquery_id=fmi::forecast::hirlam::surface::point::timevaluepair&place={}&parameters=temperature&endtime=2020-05-21T00:00Z'.format(city)
 
     r = requests.get(url)
     print(r.status_code)
@@ -31,6 +34,7 @@ def plot_forecast(city):
     dates = []
     values = []
 
+    # Parse dates and values form xml
     for child in tree[0][0][-1][0]:
         iso = child[0][0].text
         value = float(child[0][1].text)
@@ -39,19 +43,16 @@ def plot_forecast(city):
         values.append(value)
         dates.append(datetime)
 
-    fig, ax = plt.subplots()
+    # Apply savgol filter
+    smoothen = savgol_filter(values, 7, 3)
 
-    ax.set_title('{}, Ilmatieteen laitos'.format(city))
-    ax.set_ylabel('Temperature')
-    ax.set_xlabel('Time')
 
-    #ax.xaxis.set_major_locator(hours)
-    ax.xaxis.set_major_formatter(fmt)
-    ax.xaxis.set_minor_locator(mins)
-    plt.plot(dates, values)
-    fig.autofmt_xdate()
+    df = pd.DataFrame()
+    df['temperature'] = smoothen
+    df['datetime'] = dates
+
+    df.plot(y='temperature', x='datetime')
     plt.grid(True)
-
     plt.show()
 
 if __name__ == "__main__":
