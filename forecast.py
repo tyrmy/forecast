@@ -46,12 +46,38 @@ def plot_forecast(city):
     # Apply savgol filter
     smoothen = savgol_filter(values, 7, 3)
 
-
+    # Create dataframe
     df = pd.DataFrame()
     df['temperature'] = smoothen
     df['datetime'] = dates
+    df = df.set_index('datetime')
 
-    df.plot(y='temperature', x='datetime')
+    # Group by dates and find local maximum
+    tmax = df.loc[df.groupby(pd.Grouper(freq='D')).idxmax().iloc[:,0]]
+    tmax = tmax.reset_index()
+
+    # Group by dates and find local minimum
+    tmin = df.loc[df.groupby(pd.Grouper(freq='D')).idxmin().iloc[:,0]]
+    tmin = tmin.reset_index()
+
+    # Create figure
+    fig, ax = plt.subplots(figsize=(6,6))
+
+    # Plot line, max and min scatter
+    df.plot(y='temperature',
+            title="Ennuste {}".format(city),
+            ax=ax)
+    tmax.plot.scatter(y='temperature',
+            x='datetime',
+            c='red',
+            s=50,
+            ax=ax)
+    tmin.plot.scatter(y='temperature',
+            x='datetime',
+            c='blue',
+            s=50,
+            ax=ax)
+
     plt.grid(True)
     plt.show()
 
