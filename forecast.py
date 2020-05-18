@@ -1,3 +1,9 @@
+"""
+Created on 18th May 2020
+@author Lassi Lehtinen
+
+Fetch data from ilmatieteen laitos and analyze the data
+"""
 import requests
 
 from xml.etree import ElementTree
@@ -13,6 +19,7 @@ hours = mdates.HourLocator(2)
 fmt = mdates.DateFormatter('%m-%d %H:%M')
 
 def plot_forecast(city):
+    """ Fetch data from ilmatieteen laitos and plot results for a city specified """
     url = 'http://opendata.fmi.fi/wfs?service=WFS&version=2.0.0&request=getFeature&storedquery_id=fmi::forecast::hirlam::surface::point::timevaluepair&place={}&parameters=temperature&'.format(city)
 
     r = requests.get(url)
