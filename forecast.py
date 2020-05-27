@@ -17,6 +17,11 @@ import matplotlib.dates as mdates
 from scipy.signal import savgol_filter
 import pandas as pd
 
+def label_point(x, y, val, ax):
+    a = pd.concat({'x': x, 'y': y, 'val': val}, axis=1)
+    for i, point in a.iterrows():
+        ax.text(point['x'], point['y'], str(point['val']))
+
 def grid_forecasts(citys):
     """ Fetch data from ilmatieteen laitos and plot results for a city specified """
     # Create figure
@@ -116,13 +121,13 @@ def plot_forecasts(citys):
         df['temperature'] = values
         df['datetime'] = dates
         df = df.set_index('datetime')
-        ax.set_ylim(bottom=5, top=20)
+        ax.set_ylim(bottom=5, top=25)
 
-        # Group by dates and find local maximum
+        # Group by dates and find local maximums
         tmax = df.loc[df.groupby(pd.Grouper(freq='D')).idxmax().iloc[:,0]]
         tmax = tmax.reset_index()
 
-        # Group by dates and find local minimum
+        # Group by dates and find local minimums
         tmin = df.loc[df.groupby(pd.Grouper(freq='D')).idxmin().iloc[:,0]]
         tmin = tmin.reset_index()
 
@@ -133,13 +138,17 @@ def plot_forecasts(citys):
         tmax.plot.scatter(y='temperature',
                 x='datetime',
                 c='red',
-                s=50,
+                s=40,
                 ax=ax)
         tmin.plot.scatter(y='temperature',
                 x='datetime',
                 c='blue',
-                s=50,
+                s=30,
                 ax=ax)
+
+        # Draw min and max values to plot
+        label_point(tmin.datetime, tmin.temperature, tmin.temperature, ax)
+        label_point(tmax.datetime, tmax.temperature, tmax.temperature, ax)
 
     ax.grid(True)
     plt.legend(citys)
@@ -147,5 +156,5 @@ def plot_forecasts(citys):
     plt.show()
 
 if __name__ == "__main__":
-    citys = ['Kuopio', 'Rauma', 'Turku', 'Vantaa']
+    citys = ['Kuopio', 'Rauma', 'Turku']
     plot_forecasts(citys)
